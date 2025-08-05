@@ -1,0 +1,3 @@
+import libs = libsimbody%lib{simbody}
+
+exe{driver}: {hxx ixx txx cxx}{**} $libs testscript{**}
