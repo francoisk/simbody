@@ -4,10 +4,12 @@ impl_libs = # Implementation dependencies.
 
 # Headers and source files.
 #
-lib{SimTKcommon}: SimTKcommon/{hxx}{**} \
-                  SimTKcommon/{cxx}{** -tests/**}
+./: lib{SimTKcommon}: SimTKcommon/{hxx}{**} \
+                      SimTKcommon/{cxx}{** -tests/**}
 
-lib{SimTKcommon}: $impl_libs $intf_libs
+./: lib{SimTKmath}: SimTKmath/{hxx}{**}                 \
+                    SimTKmath/{cxx}{** -**tests/*}      \
+                    SimTKmath/{h c}{** -**tests/*}
 
 sys_libs =
 if ($cxx.target.class != 'windows')
@@ -18,9 +20,11 @@ if ($cxx.target.class != 'windows')
     sys_libs += -pthread -lrt
 }
 
-lib{SimTKcommon}: cxx.libs += $sys_libs
+lib{SimTKcommon SimTKmath}: cxx.libs += $sys_libs
 
-# Build options.
+lib{SimTKmath}: lib{SimTKcommon}
+
+# Build options: SimTKcommon
 #
 SimTKcommon/obj{*}:                                                             \
   cxx.poptions += "-I$src_base/include"                                         \
@@ -44,7 +48,28 @@ SimTKcommon/objs{*}: cxx.poptions += -DSimTK_SimTKCOMMON_BUILDING_SHARED_LIBRARY
 
 SimTKcommon/obja{*}: cxx.poptions += -DSimTK_SimTKCOMMON_BUILDING_STATIC_LIBRARY
 
-# Export options.
+# Build options: SimTKmath
+#
+SimTKmath/obj{*}:                                                               \
+  cc.poptions += "-I$src_base/include"                                          \
+                 "-I$src_base/LinearAlgebra/include"                            \
+                 "-I$src_base/Integrators/include"                              \
+                 "-I$src_base/Optimizers/include"                               \
+                 "-I$src_base/Geometry/include"                                 \
+                 "-I$src_base/Integrators/src/CPodes/sundials/include"          \
+                 -DSimTK_SIMMATH_AUTHORS=\"Jack.Middleton_Michael.Sherman\"     \
+                 -DSimTK_SIMMATH_COPYRIGHT_YEARS=\"2005-10\"                    \
+                 -DSimTK_SIMMATH_LIBRARY_NAME=SimTKmath                         \
+                 -DSimTK_SIMMATH_MAJOR_VERSION="$version.major"                 \
+                 -DSimTK_SIMMATH_MINOR_VERSION="$version.minor"                 \
+                 -DSimTK_SIMMATH_PATCH_VERSION="$version.patch"
+
+SimTKmath/objs{*}: cc.poptions += -DSimTK_SIMMATH_BUILDING_SHARED_LIBRARY       \
+                                  -DSimTKmath_EXPORTS
+
+SimTKmath/obja{*}: cc.poptions += -DSimTK_SIMMATH_BUILDING_STATIC_LIBRARY
+
+# Export options: SimTKcommon
 #
 lib{SimTKcommon}:
 {
@@ -64,16 +89,31 @@ lib{SimTKcommon}:
 if ($cxx.target.class != 'windows')
   lib{SimTKcommon}: cxx.export.libs += $sys_libs
 
-liba{SimTKcommon}: cxx.export.poptions += -DSimTK_USE_STATIC_LIBRARIES
+# Export options: SimTKmath
+#
+lib{SimTKmath}:
+{
+  cxx.export.poptions = "-I$src_base/SimTKmath/include"                 \
+                        "-I$src_base/SimTKmath/LinearAlgebra/include"   \
+                        "-I$src_base/SimTKmath/Integrators/include"     \
+                        "-I$src_base/SimTKmath/Optimizers/include"      \
+                        "-I$src_base/SimTKmath/Geometry/include"
+
+  cxx.export.libs = $intf_libs lib{SimTKcommon}
+}
+
+# Export options: All libraries
+#
+liba{SimTKcommon SimTKmath}: cxx.export.poptions += -DSimTK_USE_STATIC_LIBRARIES
 
 # For pre-releases use the complete version to make sure they cannot
 # be used in place of another pre-release or the final version. See
 # the version module for details on the version.* variable values.
 #
 if $version.pre_release
-  lib{SimTKcommon}: bin.lib.version = "-$version.project_id"
+  lib{SimTKcommon SimTKmath}: bin.lib.version = "-$version.project_id"
 else
-  lib{SimTKcommon}: bin.lib.version = "-$version.major.$version.minor"
+  lib{SimTKcommon SimTKmath}: bin.lib.version = "-$version.major.$version.minor"
 
 # Install into the libsimbody/ subdirectory of, say, /usr/include/
 # recreating subdirectories.
