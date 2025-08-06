@@ -1,0 +1,18 @@
+import lib = libsimbody%lib{SimTKcommon}
+
+# Note: Exclude BNTTest.cpp because it fails to compile under g++ 14.2.0 for
+#       what seems like OK if complicated code (error: no conversion from
+#       conjugate<float> to std::complex<double>). If it were my own code I
+#       would take the time to fix it but, alas, it is not.
+#
+for t: tests/cxx{*}
+{
+  n = $name($t)
+
+  ./: exe{$name($t)}: include = ($n != 'BNTTest' || $cxx.id.type != 'gcc')
+  exe{$name($t)}: $t testscript $lib
+}
+
+exe{TestPolygonalMesh}: test.cleanups = '&anchor1.vtp'  \
+                                        '&plane.vtp'    \
+                                        '&planeNoNormals.vtp'

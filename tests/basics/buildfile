@@ -1,3 +1,0 @@
-import libs = libsimbody%lib{SimTKcommon}
-
-exe{driver}: {cxx}{driver} $libs
