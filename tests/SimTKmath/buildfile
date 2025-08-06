@@ -1,0 +1,12 @@
+import lib = libsimbody%lib{SimTKmath}
+
+# Note: The *ExplicitEuler* tests are very slow.
+#
+# @@ TODO Re-enable the *ExplicitEuler* tests.
+#
+for t: tests/cxx{* -*ExplicitEuler*}
+  ./: exe{$name($t)}: $t testscript $lib
+
+exe{TestSpline}: test.cleanups = '&simtk_splinefitter*.csv'
+exe{CMAESTest}:  test.cleanups = '&actparcmaes.par' \
+                                 '&errcmaes.err'
