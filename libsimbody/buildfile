@@ -2,34 +2,78 @@ intf_libs = # Interface dependencies.
 impl_libs = # Implementation dependencies.
 #import xxxx_libs += libhello%lib{hello}
 
-lib{simbody}: {hxx ixx txx cxx}{**} $impl_libs $intf_libs
+# Headers and source files.
+#
+lib{SimTKcommon}: SimTKcommon/{hxx}{**} \
+                  SimTKcommon/{cxx}{** -tests/**}
+
+lib{SimTKcommon}: $impl_libs $intf_libs
+
+sys_libs =
+if ($cxx.target.class != 'windows')
+{
+  sys_libs += -llapack -ldl -lm
+
+  if ($cxx.target.class != 'macos')
+    sys_libs += -pthread -lrt
+}
+
+lib{SimTKcommon}: cxx.libs += $sys_libs
 
 # Build options.
 #
-cxx.poptions =+ "-I$out_root" "-I$src_root"
+SimTKcommon/obj{*}:                                                             \
+  cxx.poptions += "-I$src_base/include"                                         \
+                  "-I$src_base/BigMatrix/include"                               \
+                  "-I$src_base/Geometry/include"                                \
+                  "-I$src_base/Mechanics/include"                               \
+                  "-I$src_base/Polynomial/include"                              \
+                  "-I$src_base/Random/include"                                  \
+                  "-I$src_base/Scalar/include"                                  \
+                  "-I$src_base/Simulation/include"                              \
+                  "-I$src_base/SmallMatrix/include"                             \
+                  -DSimTK_SimTKCOMMON_AUTHORS=\"Michael.Sherman_Peter.Eastman\" \
+                  -DSimTK_SimTKCOMMON_COPYRIGHT_YEARS=\"2005-10\"               \
+                  -DSimTK_SimTKCOMMON_LIBRARY_NAME=SimTKcommon                  \
+                  -DSimTK_SimTKCOMMON_MAJOR_VERSION="$version.major"            \
+                  -DSimTK_SimTKCOMMON_MINOR_VERSION="$version.minor"            \
+                  -DSimTK_SimTKCOMMON_PATCH_VERSION="$version.patch"
 
-#obja{*}: cxx.poptions += -DLIBSIMBODY_STATIC_BUILD
-#objs{*}: cxx.poptions += -DLIBSIMBODY_SHARED_BUILD
+SimTKcommon/objs{*}: cxx.poptions += -DSimTK_SimTKCOMMON_BUILDING_SHARED_LIBRARY        \
+                                     -DSimTKcommon_EXPORTS
+
+SimTKcommon/obja{*}: cxx.poptions += -DSimTK_SimTKCOMMON_BUILDING_STATIC_LIBRARY
 
 # Export options.
 #
-lib{simbody}:
+lib{SimTKcommon}:
 {
-  cxx.export.poptions = "-I$out_root" "-I$src_root"
+  cxx.export.poptions = "-I$src_base/SimTKcommon/include"               \
+                        "-I$src_base/SimTKcommon/BigMatrix/include"     \
+                        "-I$src_base/SimTKcommon/Geometry/include"      \
+                        "-I$src_base/SimTKcommon/Mechanics/include"     \
+                        "-I$src_base/SimTKcommon/Polynomial/include"    \
+                        "-I$src_base/SimTKcommon/Random/include"        \
+                        "-I$src_base/SimTKcommon/Scalar/include"        \
+                        "-I$src_base/SimTKcommon/Simulation/include"    \
+                        "-I$src_base/SimTKcommon/SmallMatrix/include"
+
   cxx.export.libs = $intf_libs
 }
 
-#liba{simbody}: cxx.export.poptions += -DLIBSIMBODY_STATIC
-#libs{simbody}: cxx.export.poptions += -DLIBSIMBODY_SHARED
+if ($cxx.target.class != 'windows')
+  lib{SimTKcommon}: cxx.export.libs += $sys_libs
+
+liba{SimTKcommon}: cxx.export.poptions += -DSimTK_USE_STATIC_LIBRARIES
 
 # For pre-releases use the complete version to make sure they cannot
 # be used in place of another pre-release or the final version. See
 # the version module for details on the version.* variable values.
 #
 if $version.pre_release
-  lib{simbody}: bin.lib.version = "-$version.project_id"
+  lib{SimTKcommon}: bin.lib.version = "-$version.project_id"
 else
-  lib{simbody}: bin.lib.version = "-$version.major.$version.minor"
+  lib{SimTKcommon}: bin.lib.version = "-$version.major.$version.minor"
 
 # Install into the libsimbody/ subdirectory of, say, /usr/include/
 # recreating subdirectories.
