@@ -1,3 +1,3 @@
-import libs = libsimbody%lib{simbody}
+import libs = libsimbody%lib{SimTKcommon}
 
-exe{driver}: {hxx ixx txx cxx}{**} $libs testscript{**}
+exe{driver}: {cxx}{driver} $libs

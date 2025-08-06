@@ -1,34 +1,18 @@
-#include <sstream>
-#include <stdexcept>
-
-#include <libsimbody/simbody.h>
-
-#undef NDEBUG
-#include <cassert>
+#include <SimTKcommon/basics.h>
 
 int main ()
 {
-  using namespace std;
-  using namespace simbody;
+  using namespace SimTK;
 
-  // Basics.
-  //
-  {
-    ostringstream o;
-    say_hello (o, "World");
-    assert (o.str () == "Hello, World!\n");
-  }
+  String s{"hEllO"};
 
-  // Empty name.
-  //
-  try
-  {
-    ostringstream o;
-    say_hello (o, "");
-    assert (false);
-  }
-  catch (const invalid_argument& e)
-  {
-    assert (e.what () == string ("empty name"));
-  }
+  bool b{true};
+  float f{1.2};
+  double d{3.4};
+
+  return (!s.tryConvertToBool(b) &&
+          !s.tryConvertToFloat(f) &&
+          !s.tryConvertToDouble(d) &&
+          s.toUpper() == "HELLO" &&
+          s.toLower() == "hello") ? 0 : 1;
 }
