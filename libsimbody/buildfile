@@ -4,12 +4,15 @@ impl_libs = # Implementation dependencies.
 
 # Headers and source files.
 #
-./: lib{SimTKcommon}: SimTKcommon/{hxx}{**} \
-                      SimTKcommon/{cxx}{** -tests/**}
+./: lib{SimTKcommon}: SimTKcommon/hxx{**} \
+                      SimTKcommon/cxx{** -tests/**}
 
-./: lib{SimTKmath}: SimTKmath/{hxx}{**}                 \
-                    SimTKmath/{cxx}{** -**tests/*}      \
+./: lib{SimTKmath}: SimTKmath/hxx{**}                 \
+                    SimTKmath/cxx{** -**tests/*}      \
                     SimTKmath/{h c}{** -**tests/*}
+
+./: lib{SimTKsimbody}: Simbody/hxx{** -Visualizer/simbody-visualizer/**} \
+                       Simbody/cxx{** -Visualizer/simbody-visualizer/** -tests/**}
 
 sys_libs =
 if ($cxx.target.class != 'windows')
@@ -20,9 +23,10 @@ if ($cxx.target.class != 'windows')
     sys_libs += -pthread -lrt
 }
 
-lib{SimTKcommon SimTKmath}: cxx.libs += $sys_libs
+lib{SimTKcommon SimTKmath SimTKsimbody}: cxx.libs += $sys_libs
 
 lib{SimTKmath}: lib{SimTKcommon}
+lib{SimTKsimbody}: lib{SimTKcommon SimTKmath}
 
 # Build options: SimTKcommon
 #
@@ -69,6 +73,42 @@ SimTKmath/objs{*}: cc.poptions += -DSimTK_SIMMATH_BUILDING_SHARED_LIBRARY       
 
 SimTKmath/obja{*}: cc.poptions += -DSimTK_SIMMATH_BUILDING_STATIC_LIBRARY
 
+# -DSIMBODY_PATH_FROM_LIBDIR_TO_VIZ_DIR=\"../libexec/simbody\"
+# -DSIMBODY_VISUALIZER_INSTALL_DIR=\"/usr/local/libexec/simbody/\"
+# -DSIMBODY_VISUALIZER_REL_INSTALL_DIR=\"libexec/simbody/\"
+# -DSimTK_SIMBODY_AUTHORS=\"Michael.Sherman_Peter.Eastman\"
+# -DSimTK_SIMBODY_BUILDING_SHARED_LIBRARY
+# -DSimTK_SIMBODY_COPYRIGHT_YEARS=\"2005-20\"
+# -DSimTK_SIMBODY_LIBRARY_NAME=SimTKsimbody
+# -DSimTK_SIMBODY_MAJOR_VERSION=3
+# -DSimTK_SIMBODY_MINOR_VERSION=8
+# -DSimTK_SIMBODY_PATCH_VERSION=0
+# -DSimTKsimbody_EXPORTS
+
+# Build options: SimTKsimbody
+#
+# Note that the various path/directory macros are only used to launch the
+# Visualizer executable which is not supported so just use fake values for the
+# sake of simplicity (and to flush out problems early).
+#
+Simbody/obj{*}:                                                                 \
+  cxx.poptions += "-I$src_base/include"                                         \
+                  "-I$src_base/Visualizer/include"                              \
+                  -DSimTK_SIMBODY_AUTHORS=\"Michael.Sherman_Peter.Eastman\"     \
+                  -DSimTK_SIMBODY_COPYRIGHT_YEARS=\"2005-20\"                   \
+                  -DSimTK_SIMBODY_LIBRARY_NAME=SimTKsimbody                     \
+                  -DSimTK_SIMBODY_MAJOR_VERSION="$version.major"                \
+                  -DSimTK_SIMBODY_MINOR_VERSION="$version.minor"                \
+                  -DSimTK_SIMBODY_PATCH_VERSION="$version.patch"                \
+                  -DSIMBODY_PATH_FROM_LIBDIR_TO_VIZ_DIR="\"nonexistent_dir\""   \
+                  -DSIMBODY_VISUALIZER_INSTALL_DIR="\"nonexistent_dir\""        \
+                  -DSIMBODY_VISUALIZER_REL_INSTALL_DIR="\"nonexistent_dir\""
+
+Simbody/objs{*}: cxx.poptions += -DSimTK_SIMBODY_BUILDING_SHARED_LIBRARY        \
+                                 -DSimTKsimbody_EXPORTS
+
+Simbody/obja{*}: cxx.poptions += -DSimTK_SIMBODY_BUILDING_STATIC_LIBRARY
+
 # Export options: SimTKcommon
 #
 lib{SimTKcommon}:
@@ -102,18 +142,31 @@ lib{SimTKmath}:
   cxx.export.libs = $intf_libs lib{SimTKcommon}
 }
 
+# Export options: SimTKsimbody
+#
+lib{SimTKsimbody}:
+{
+  cxx.export.poptions = "-I$src_base/Simbody/include"   \
+                        "-I$src_base/Simbody/Visualizer/include"
+
+  cxx.export.libs = $intf_libs lib{SimTKcommon SimTKmath}
+}
+
 # Export options: All libraries
 #
-liba{SimTKcommon SimTKmath}: cxx.export.poptions += -DSimTK_USE_STATIC_LIBRARIES
+liba{SimTKcommon SimTKmath SimTKsimbody}: \
+  cxx.export.poptions += -DSimTK_USE_STATIC_LIBRARIES
 
 # For pre-releases use the complete version to make sure they cannot
 # be used in place of another pre-release or the final version. See
 # the version module for details on the version.* variable values.
 #
 if $version.pre_release
-  lib{SimTKcommon SimTKmath}: bin.lib.version = "-$version.project_id"
+  lib{SimTKcommon SimTKmath SimTKsimbody}: \
+    bin.lib.version = "-$version.project_id"
 else
-  lib{SimTKcommon SimTKmath}: bin.lib.version = "-$version.major.$version.minor"
+  lib{SimTKcommon SimTKmath SimTKsimbody}: \
+    bin.lib.version = "-$version.major.$version.minor"
 
 # Install into the libsimbody/ subdirectory of, say, /usr/include/
 # recreating subdirectories.
