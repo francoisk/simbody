@@ -1,0 +1,6 @@
+import lib = libsimbody%lib{SimTKsimbody}
+
+# Note that the tests take 1m36s to run on my machine.
+#
+for t: tests/cxx{*}
+  ./: exe{$name($t)}: $t testscript $lib

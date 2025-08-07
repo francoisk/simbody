@@ -2,6 +2,7 @@
 #
 driver
 *Test*
+Simbody/Gazebo*
 
 # Testscript output directories (can be symlinks).
 #
