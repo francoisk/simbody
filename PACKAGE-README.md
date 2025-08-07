@@ -3,6 +3,7 @@
 This is a `build2` package for the [`<UPSTREAM-NAME>`](https://<UPSTREAM-URL>)
 C++ library. It provides <SUMMARY-OF-FUNCTIONALITY>.
 
+@@ TODO Note that the Visualizer application is not supported.
 
 ## Usage
 
