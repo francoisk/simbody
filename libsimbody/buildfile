@@ -10,6 +10,8 @@
 ./: lib{SimTKsimbody}: Simbody/hxx{** -Visualizer/simbody-visualizer/**} \
                        Simbody/cxx{** -Visualizer/simbody-visualizer/** -tests/**}
 
+# Libraries
+#
 sys_libs =
 if ($cxx.target.class != 'windows')
 {
@@ -24,18 +26,36 @@ lib{SimTKcommon}: cxx.libs += $sys_libs
 lib{SimTKmath}: lib{SimTKcommon}
 lib{SimTKsimbody}: lib{SimTKcommon SimTKmath}
 
+# SimTKcommon/ source subdirectories.
+#
+common_dirs = BigMatrix         \
+              Geometry          \
+              Mechanics         \
+              Polynomial        \
+              Random            \
+              Scalar            \
+              Simulation        \
+              SmallMatrix
+
+# SimTKmath/ source subdirectories.
+#
+math_dirs = LinearAlgebra       \
+            Integrators         \
+            Optimizers          \
+            Geometry
+
+# Simbody/ source subdirectories.
+#
+simbody_dirs = Visualizer
+
 # Build options: SimTKcommon
 #
+common_includes = "-I$src_base/SimTKcommon/include"
+for d: $common_dirs
+  common_includes += "-I$src_base/SimTKcommon/$d/include"
+
 SimTKcommon/obj{*}:                                                             \
-  cxx.poptions += "-I$src_base/include"                                         \
-                  "-I$src_base/BigMatrix/include"                               \
-                  "-I$src_base/Geometry/include"                                \
-                  "-I$src_base/Mechanics/include"                               \
-                  "-I$src_base/Polynomial/include"                              \
-                  "-I$src_base/Random/include"                                  \
-                  "-I$src_base/Scalar/include"                                  \
-                  "-I$src_base/Simulation/include"                              \
-                  "-I$src_base/SmallMatrix/include"                             \
+  cxx.poptions += $common_includes                                              \
                   -DSimTK_SimTKCOMMON_AUTHORS=\"Michael.Sherman_Peter.Eastman\" \
                   -DSimTK_SimTKCOMMON_COPYRIGHT_YEARS=\"2005-10\"               \
                   -DSimTK_SimTKCOMMON_LIBRARY_NAME=SimTKcommon                  \
@@ -50,12 +70,12 @@ SimTKcommon/obja{*}: cxx.poptions += -DSimTK_SimTKCOMMON_BUILDING_STATIC_LIBRARY
 
 # Build options: SimTKmath
 #
+math_includes = "-I$src_base/SimTKmath/include"
+for d: $math_dirs
+  math_includes += "-I$src_base/SimTKmath/$d/include"
+
 SimTKmath/obj{*}:                                                               \
-  cc.poptions += "-I$src_base/include"                                          \
-                 "-I$src_base/LinearAlgebra/include"                            \
-                 "-I$src_base/Integrators/include"                              \
-                 "-I$src_base/Optimizers/include"                               \
-                 "-I$src_base/Geometry/include"                                 \
+  cc.poptions += $math_includes                                                 \
                  "-I$src_base/Integrators/src/CPodes/sundials/include"          \
                  -DSimTK_SIMMATH_AUTHORS=\"Jack.Middleton_Michael.Sherman\"     \
                  -DSimTK_SIMMATH_COPYRIGHT_YEARS=\"2005-10\"                    \
@@ -75,9 +95,12 @@ SimTKmath/obja{*}: cc.poptions += -DSimTK_SIMMATH_BUILDING_STATIC_LIBRARY
 # Visualizer executable which is not supported so just use fake values for the
 # sake of simplicity (and to flush out problems early).
 #
+simbody_includes = "-I$src_base/Simbody/include"
+for d: $simbody_dirs
+  simbody_includes += "-I$src_base/Simbody/$d/include"
+
 Simbody/obj{*}:                                                                 \
-  cxx.poptions += "-I$src_base/include"                                         \
-                  "-I$src_base/Visualizer/include"                              \
+  cxx.poptions += $simbody_includes                                             \
                   -DSimTK_SIMBODY_AUTHORS=\"Michael.Sherman_Peter.Eastman\"     \
                   -DSimTK_SIMBODY_COPYRIGHT_YEARS=\"2005-20\"                   \
                   -DSimTK_SIMBODY_LIBRARY_NAME=SimTKsimbody                     \
@@ -95,18 +118,7 @@ Simbody/obja{*}: cxx.poptions += -DSimTK_SIMBODY_BUILDING_STATIC_LIBRARY
 
 # Export options: SimTKcommon
 #
-lib{SimTKcommon}:
-{
-  cxx.export.poptions = "-I$src_base/SimTKcommon/include"               \
-                        "-I$src_base/SimTKcommon/BigMatrix/include"     \
-                        "-I$src_base/SimTKcommon/Geometry/include"      \
-                        "-I$src_base/SimTKcommon/Mechanics/include"     \
-                        "-I$src_base/SimTKcommon/Polynomial/include"    \
-                        "-I$src_base/SimTKcommon/Random/include"        \
-                        "-I$src_base/SimTKcommon/Scalar/include"        \
-                        "-I$src_base/SimTKcommon/Simulation/include"    \
-                        "-I$src_base/SimTKcommon/SmallMatrix/include"
-}
+lib{SimTKcommon}: cxx.export.poptions = $common_includes
 
 if ($cxx.target.class != 'windows')
   lib{SimTKcommon}: cxx.export.libs += $sys_libs
@@ -115,12 +127,7 @@ if ($cxx.target.class != 'windows')
 #
 lib{SimTKmath}:
 {
-  cxx.export.poptions = "-I$src_base/SimTKmath/include"                 \
-                        "-I$src_base/SimTKmath/LinearAlgebra/include"   \
-                        "-I$src_base/SimTKmath/Integrators/include"     \
-                        "-I$src_base/SimTKmath/Optimizers/include"      \
-                        "-I$src_base/SimTKmath/Geometry/include"
-
+  cxx.export.poptions = $math_includes
   cxx.export.libs = lib{SimTKcommon}
 }
 
@@ -128,9 +135,7 @@ lib{SimTKmath}:
 #
 lib{SimTKsimbody}:
 {
-  cxx.export.poptions = "-I$src_base/Simbody/include"   \
-                        "-I$src_base/Simbody/Visualizer/include"
-
+  cxx.export.poptions = $simbody_includes
   cxx.export.libs = lib{SimTKcommon SimTKmath}
 }
 
@@ -150,11 +155,93 @@ else
   lib{SimTKcommon SimTKmath SimTKsimbody}: \
     bin.lib.version = "-$version.major.$version.minor"
 
-# Install into the libsimbody/ subdirectory of, say, /usr/include/
-# recreating subdirectories.
+# Installation
 #
-{hxx ixx txx}{*}:
+# The general header installation scheme is as follows.
+#
+#   The "Core", "Top", and "Internal" names are from the upstream
+#   CMakeLists.txt.
+#
+#   <srcdir> Is the library's source directory.
+#
+#   <incdir> is the include directory the library's headers will be installed
+#            to below include/simbody/.
+#
+# Core headers
+#
+# <srcdir>/include/h          -> include/simbody/
+# <srcdir>/<subdir>/include/h -> include/simbody/
+
+# Top headers
+#
+# <srcdir>/include/<incdir>/h          -> include/simbody/<incdir>/
+# <srcdir>/<subdir>/include/<incdir>/h -> include/simbody/<incdir>/
+
+# Internal headers
+#
+# <srcdir>/include/<incdir>/internal/h         -> include/simbody/<incdir>/internal/
+# <srcdir>/<subdir>include/<incdir>/internal/h -> include/simbody/<incdir>/internal/
+#
+{hxx h}{*}: install = false # Default to not installed
+
+# SimTKcommon
+#
+for d: . $common_dirs
 {
-  install         = include/libsimbody/
-  install.subdirs = true
+  # Core headers
+  for h: SimTKcommon/$d/include/hxx{*}
+    $h@./SimTKcommon/$d/include/: \
+      install = include/simbody/
+
+  # Top headers
+  for h: SimTKcommon/$d/include/SimTKcommon/hxx{*}
+    $h@./SimTKcommon/$d/include/SimTKcommon/: \
+      install = include/simbody/SimTKcommon/
+
+  # Internal headers
+  for h: SimTKcommon/$d/include/SimTKcommon/internal/hxx{*}
+    $h@./SimTKcommon/$d/include/SimTKcommon/internal/: \
+      install = include/simbody/SimTKcommon/internal/
 }
+
+# SiMTKmath
+#
+for d: . $math_dirs
+{
+  # Core headers
+  for h: SimTKmath/$d/include/hxx{*}
+    $h@./SimTKmath/$d/include/: \
+      install = include/simbody/
+
+  # Top headers
+  for h: SimTKmath/$d/include/simmath/hxx{*}
+    $h@./SimTKmath/$d/include/simmath/: \
+      install = include/simbody/simmath/
+
+  # Internal headers
+  for h: SimTKmath/$d/include/simmath/internal/hxx{*}
+    $h@./SimTKmath/$d/include/simmath/internal/: \
+      install = include/simbody/simmath/internal/
+}
+
+# Simbody
+#
+for d: . $simbody_dirs
+{
+  # Core headers
+  for h: Simbody/$d/include/hxx{*}
+    $h@./Simbody/$d/include/: \
+      install = include/simbody/
+
+  # Top headers
+  for h: Simbody/$d/include/simbody/hxx{*}
+    $h@./Simbody/$d/include/simbody/: \
+      install = include/simbody/simbody/
+
+  # Internal headers
+  for h: Simbody/$d/include/simbody/internal/hxx{*}
+    $h@./Simbody/$d/include/simbody/internal/: \
+      install = include/simbody/simbody/internal/
+}
+
+lib{SimTKcommon SimTKmath SimTKsimbody}: cxx.pkgconfig.include = include/simbody/
