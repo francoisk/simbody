@@ -1,7 +1,3 @@
-intf_libs = # Interface dependencies.
-impl_libs = # Implementation dependencies.
-#import xxxx_libs += libhello%lib{hello}
-
 # Headers and source files.
 #
 ./: lib{SimTKcommon}: SimTKcommon/hxx{**} \
@@ -23,7 +19,7 @@ if ($cxx.target.class != 'windows')
     sys_libs += -pthread -lrt
 }
 
-lib{SimTKcommon SimTKmath SimTKsimbody}: cxx.libs += $sys_libs
+lib{SimTKcommon}: cxx.libs += $sys_libs
 
 lib{SimTKmath}: lib{SimTKcommon}
 lib{SimTKsimbody}: lib{SimTKcommon SimTKmath}
@@ -73,18 +69,6 @@ SimTKmath/objs{*}: cc.poptions += -DSimTK_SIMMATH_BUILDING_SHARED_LIBRARY       
 
 SimTKmath/obja{*}: cc.poptions += -DSimTK_SIMMATH_BUILDING_STATIC_LIBRARY
 
-# -DSIMBODY_PATH_FROM_LIBDIR_TO_VIZ_DIR=\"../libexec/simbody\"
-# -DSIMBODY_VISUALIZER_INSTALL_DIR=\"/usr/local/libexec/simbody/\"
-# -DSIMBODY_VISUALIZER_REL_INSTALL_DIR=\"libexec/simbody/\"
-# -DSimTK_SIMBODY_AUTHORS=\"Michael.Sherman_Peter.Eastman\"
-# -DSimTK_SIMBODY_BUILDING_SHARED_LIBRARY
-# -DSimTK_SIMBODY_COPYRIGHT_YEARS=\"2005-20\"
-# -DSimTK_SIMBODY_LIBRARY_NAME=SimTKsimbody
-# -DSimTK_SIMBODY_MAJOR_VERSION=3
-# -DSimTK_SIMBODY_MINOR_VERSION=8
-# -DSimTK_SIMBODY_PATCH_VERSION=0
-# -DSimTKsimbody_EXPORTS
-
 # Build options: SimTKsimbody
 #
 # Note that the various path/directory macros are only used to launch the
@@ -122,8 +106,6 @@ lib{SimTKcommon}:
                         "-I$src_base/SimTKcommon/Scalar/include"        \
                         "-I$src_base/SimTKcommon/Simulation/include"    \
                         "-I$src_base/SimTKcommon/SmallMatrix/include"
-
-  cxx.export.libs = $intf_libs
 }
 
 if ($cxx.target.class != 'windows')
@@ -139,7 +121,7 @@ lib{SimTKmath}:
                         "-I$src_base/SimTKmath/Optimizers/include"      \
                         "-I$src_base/SimTKmath/Geometry/include"
 
-  cxx.export.libs = $intf_libs lib{SimTKcommon}
+  cxx.export.libs = lib{SimTKcommon}
 }
 
 # Export options: SimTKsimbody
@@ -149,7 +131,7 @@ lib{SimTKsimbody}:
   cxx.export.poptions = "-I$src_base/Simbody/include"   \
                         "-I$src_base/Simbody/Visualizer/include"
 
-  cxx.export.libs = $intf_libs lib{SimTKcommon SimTKmath}
+  cxx.export.libs = lib{SimTKcommon SimTKmath}
 }
 
 # Export options: All libraries
