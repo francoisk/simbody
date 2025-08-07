@@ -1,5 +1,7 @@
 import lib = libsimbody%lib{SimTKmath}
 
+./: tests/hxx{*} # Ensure any headers are distributed
+
 # Note: The *ExplicitEuler* tests are very slow.
 #
 # @@ TODO Re-enable the *ExplicitEuler* tests.

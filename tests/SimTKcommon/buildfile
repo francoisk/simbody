@@ -1,5 +1,7 @@
 import lib = libsimbody%lib{SimTKcommon}
 
+./: tests/hxx{*} # Ensure any headers are distributed
+
 # Note: Exclude BNTTest.cpp because it fails to compile under g++ 14.2.0 for
 #       what seems like OK if complicated code (error: no conversion from
 #       conjugate<float> to std::complex<double>). If it were my own code I

@@ -3,9 +3,9 @@
 ./: lib{SimTKcommon}: SimTKcommon/hxx{**} \
                       SimTKcommon/cxx{** -tests/**}
 
-./: lib{SimTKmath}: SimTKmath/hxx{**}                 \
-                    SimTKmath/cxx{** -**tests/*}      \
-                    SimTKmath/{h c}{** -**tests/*}
+./: lib{SimTKmath}: SimTKmath/hxx{**}                           \
+                    SimTKmath/Optimizers/src/IpOpt/hxx{*.hpp}   \
+                    SimTKmath/{cxx c}{** -**tests/*}
 
 ./: lib{SimTKsimbody}: Simbody/hxx{** -Visualizer/simbody-visualizer/**} \
                        Simbody/cxx{** -Visualizer/simbody-visualizer/** -tests/**}

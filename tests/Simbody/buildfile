@@ -1,5 +1,7 @@
 import lib = libsimbody%lib{SimTKsimbody}
 
+./: tests/hxx{*} # Ensure any headers are distributed
+
 # Note that the tests take 1m36s to run on my machine.
 #
 for t: tests/cxx{*}
