@@ -7,7 +7,13 @@ import lib = libsimbody%lib{SimTKcommon}
 #       conjugate<float> to std::complex<double>). If it were my own code I
 #       would take the time to fix it but, alas, it is not.
 #
-for t: tests/cxx{*}
+#       Exclude SFMTTest because it includes a header from the src/ directory
+#       which is not installed and thus test-installed fails on CI. Turning
+#       these into unit tests would fix it but all of the other tests use only
+#       the public API so it seems like the overall intention is for these to
+#       be integration tests. Should probably report this upstream.
+#
+for t: tests/cxx{* -SFMTTest}
 {
   n = $name($t)
 

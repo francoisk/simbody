@@ -4,5 +4,12 @@ import lib = libsimbody%lib{SimTKsimbody}
 
 # Note that the tests take 1m36s to run on my machine.
 #
-for t: tests/cxx{*}
+# Note: Exclude TestConstraints because it includes a header from the src/
+#       directory which is not installed and thus test-installed fails on
+#       CI. Turning these into unit tests would fix it but all of the other
+#       tests use only the public API so it seems like the overall intention
+#       is for these to be integration tests. Should probably report this
+#       upstream.
+#
+for t: tests/cxx{* -TestConstraints}
   ./: exe{$name($t)}: $t testscript $lib
