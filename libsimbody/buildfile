@@ -1,3 +1,6 @@
+windows = ($cxx.target.class == 'windows')
+macos   = ($cxx.target.class == 'macos')
+
 # Headers and source files.
 #
 ./: lib{SimTKcommon}: SimTKcommon/hxx{**} \
@@ -7,24 +10,111 @@
                     SimTKmath/Optimizers/src/IpOpt/hxx{*.hpp}   \
                     SimTKmath/{cxx c}{** -**tests/*}
 
+# Note: Exclude the Visualizer executable code (but do include the Visualizer
+#       library code).
+#
 ./: lib{SimTKsimbody}: Simbody/hxx{** -Visualizer/simbody-visualizer/**} \
                        Simbody/cxx{** -Visualizer/simbody-visualizer/** -tests/**}
 
 # Libraries
 #
 sys_libs =
-if ($cxx.target.class != 'windows')
+if! $windows
 {
-  sys_libs += -llapack -ldl -lm
+  if $macos
+    sys_libs += -framework Accelerate # LAPACK, BLAS
+  else
+    sys_libs += -llapack -lblas -pthread -lrt
 
-  if ($cxx.target.class != 'macos')
-    sys_libs += -pthread -lrt
+  sys_libs += -ldl -lm
 }
 
-lib{SimTKcommon}: cxx.libs += $sys_libs
-
-lib{SimTKmath}: lib{SimTKcommon}
+lib{SimTKcommon}:  cxx.libs += $sys_libs
+lib{SimTKmath}:    lib{SimTKcommon}
 lib{SimTKsimbody}: lib{SimTKcommon SimTKmath}
+
+# Prebuilt Windows libraries provided by upstream
+
+# Work around non-Windows platforms not knowing what libi{} is.
+#
+# This is necessary because libi{} targets are not supposed to be explicitly
+# referred to in buildfiles -- they're handled completely by build2. Therefore
+# build2 only registers the libi{} target type if building for a Windows
+# target.
+#
+if! $windows
+  define libi: file
+
+# Copy the prebuilt Windows libraries into the output directory via a number
+# of ad hoc recipes.
+#
+# For LAPACK and BLAS, put the DLL and LIB in an ad hoc group so that build2
+# will be able to find the libi{} target from the libs{} target.
+#
+arch_dir = ($cxx.target.cpu == 'x86_64' ? 'lib_x64' : 'lib_x86')
+
+<libs{liblapack.dll} libi{liblapack.lib}>: \
+  Platform/Windows/$arch_dir/file{liblapack.dll liblapack.lib}
+% update
+{{
+  cp $path($<[0]) $path($>[0])
+  cp $path($<[1]) $path($>[1])
+}}
+% clean
+{{
+  rm -f $path($>[0]) $path($>[1])
+}}
+
+<libs{libblas.dll} libi{libblas.lib}>: \
+  Platform/Windows/$arch_dir/file{libblas.dll libblas.lib}
+% update
+{{
+  cp $path($<[0]) $path($>[0])
+  cp $path($<[1]) $path($>[1])
+}}
+% clean
+{{
+  rm -f $path($>[0]) $path($>[1])
+}} 
+
+libs{libgcc_s_sjlj-1.dll}: Platform/Windows/$arch_dir/file{libgcc_s_sjlj-1.dll}
+% update
+{{
+  cp $path($<[0]) $path($>[0])
+}}
+% clean
+{{
+  rm -f $path($>[0])
+}}
+
+libs{libgfortran-3.dll}: Platform/Windows/$arch_dir/file{libgfortran-3.dll}
+% update
+{{
+  cp $path($<[0]) $path($>[0])
+}}
+% clean
+{{
+  rm -f $path($>[0])
+}}
+
+libs{libquadmath-0.dll}: Platform/Windows/$arch_dir/file{libquadmath-0.dll}
+% update
+{{
+  cp $path($<[0]) $path($>[0])
+}}
+% clean
+{{
+  rm -f $path($>[0])
+}}
+
+# Dependencies involving the prebuilt Windows libraries.
+#
+libs{liblapack.dll}: libs{libblas.dll}
+libs{libblas.dll}:   libs{libgcc_s_sjlj-1.dll   \
+                          libgfortran-3.dll     \
+                          libquadmath-0.dll}
+
+lib{SimTKcommon}: libs{liblapack.dll libblas.dll}: include = $windows
 
 # SimTKcommon/ source subdirectories.
 #
@@ -45,6 +135,9 @@ math_dirs = LinearAlgebra       \
             Geometry
 
 # Simbody/ source subdirectories.
+#
+# Note that we will only be pulling in the Visualizer library headers, not the
+# application headers in the simbody-visualizer/ subdirectory.
 #
 simbody_dirs = Visualizer
 
@@ -91,14 +184,14 @@ SimTKmath/obja{*}: cc.poptions += -DSimTK_SIMMATH_BUILDING_STATIC_LIBRARY
 
 # Build options: SimTKsimbody
 #
-# Note that the various path/directory macros are only used to launch the
-# Visualizer executable which is not supported so just use fake values for the
-# sake of simplicity (and to flush out problems early).
-#
 simbody_includes = "-I$src_base/Simbody/include"
 for d: $simbody_dirs
   simbody_includes += "-I$src_base/Simbody/$d/include"
 
+# Note that the various path/directory macros are only used to launch the
+# Visualizer executable which is not supported so just use fake values for the
+# sake of simplicity (and to flush out problems early).
+#
 Simbody/obj{*}:                                                                 \
   cxx.poptions += $simbody_includes                                             \
                   -DSimTK_SIMBODY_AUTHORS=\"Michael.Sherman_Peter.Eastman\"     \
@@ -116,11 +209,32 @@ Simbody/objs{*}: cxx.poptions += -DSimTK_SIMBODY_BUILDING_SHARED_LIBRARY        
 
 Simbody/obja{*}: cxx.poptions += -DSimTK_SIMBODY_BUILDING_STATIC_LIBRARY
 
+# Disable warnings about illegal UTF-8 characters (treated as errors on
+# Windows CI).
+#
+# Note that Geodesic.cpp and ContactGeometry.cpp include the errant code which
+# is in GeodesicEquations.h.
+#
+if ($cxx.class == 'msvc')
+{
+  SimTKmath/Geometry/src/obj{CollisionDetectionAlgorithm        \
+                             Geodesic                           \
+                             ContactGeometry}: cxx.coptions += /wd4828
+}
+else
+{
+  SimTKmath/Geometry/src/obj{CollisionDetectionAlgorithm        \
+                             Geodesic                           \
+                             ContactGeometry}: cxx.coptions += -Wno-invalid-utf8
+}
+
 # Export options: SimTKcommon
 #
 lib{SimTKcommon}: cxx.export.poptions = $common_includes
 
-if ($cxx.target.class != 'windows')
+if $windows
+  lib{SimTKcommon}: cxx.export.libs += libs{liblapack.dll libblas.dll}
+else
   lib{SimTKcommon}: cxx.export.libs += $sys_libs
 
 # Export options: SimTKmath
@@ -139,10 +253,17 @@ lib{SimTKsimbody}:
   cxx.export.libs = lib{SimTKcommon SimTKmath}
 }
 
-# Export options: All libraries
+# Export options: All simbody libraries
 #
 liba{SimTKcommon SimTKmath SimTKsimbody}: \
   cxx.export.poptions += -DSimTK_USE_STATIC_LIBRARIES
+
+# Export options: Prebuilt Windows libraries
+#
+libs{liblapack.dll}: cxx.export.libs = libs{libblas.dll}
+libs{libblas.dll}:   cxx.export.libs = libs{libgcc_s_sjlj-1.dll \
+                                            libgfortran-3.dll   \
+                                            libquadmath-0.dll}
 
 # For pre-releases use the complete version to make sure they cannot
 # be used in place of another pre-release or the final version. See
@@ -171,16 +292,16 @@ else
 #
 # <srcdir>/include/h          -> include/simbody/
 # <srcdir>/<subdir>/include/h -> include/simbody/
-
+#
 # Top headers
 #
 # <srcdir>/include/<incdir>/h          -> include/simbody/<incdir>/
 # <srcdir>/<subdir>/include/<incdir>/h -> include/simbody/<incdir>/
-
+#
 # Internal headers
 #
-# <srcdir>/include/<incdir>/internal/h         -> include/simbody/<incdir>/internal/
-# <srcdir>/<subdir>include/<incdir>/internal/h -> include/simbody/<incdir>/internal/
+# <srcdir>/include/<incdir>/internal/h          -> include/simbody/<incdir>/internal/
+# <srcdir>/<subdir>/include/<incdir>/internal/h -> include/simbody/<incdir>/internal/
 #
 {hxx h}{*}: install = false # Default to not installed
 
