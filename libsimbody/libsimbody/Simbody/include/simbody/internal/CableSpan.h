@@ -607,9 +607,8 @@ public:
     ~CableSubsystemTestHelper() noexcept;
     CableSubsystemTestHelper(const CableSubsystemTestHelper&);
     CableSubsystemTestHelper& operator=(const CableSubsystemTestHelper&);
-    CableSubsystemTestHelper(CableSubsystemTestHelper&&) noexcept = default;
-    CableSubsystemTestHelper& operator=(CableSubsystemTestHelper&&) noexcept =
-        default;
+    CableSubsystemTestHelper(CableSubsystemTestHelper&&) noexcept;
+    CableSubsystemTestHelper& operator=(CableSubsystemTestHelper&&) noexcept;
 
     /** Test the paths of all CableSpan registered in a CableSubsystem.
     State must be realized to Stage::Position.
