@@ -1,0 +1,6 @@
+$out_root/
+{
+  include libsimbody/
+}
+
+export $out_root/libsimbody/$import.target

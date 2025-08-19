@@ -1,0 +1,76 @@
+# TODO
+
+1) Consider replacing the upstream-provided prebuilt Windows libraries with
+   build2-packaged ones
+
+2) Consider providing build2-packaged LAPACK and BLAS libraries on Linux and
+   BSD. Currently we rely on the user to install the system-provided ones (as
+   upstream also does).
+
+One potential current problem with 1) and 2) is that the reference and/or the
+most widely used LAPACK and BLAS implementations seem to be written in Fortran
+which build2 does not currently support. But odds are good that a suitable C
+implementation does exist (e.g. Intel oneMKL).
+
+# Patches applied to the upstream code
+
+1) Simbody/include/simbody/internal/CableSpan.h and
+   Simbody/src/CableSpan_SubsystemTestHelper_Impl.cpp
+
+   Errors due to incomplete type in ~unique_ptr(). Recent C++ standards have
+   become stricter in this regard. Upstream probably hasn't run into this yet
+   because they let the system compiler select its default C++ standard (C++17
+   in my case) while it is common for build2 packages to select the latest C++
+   standard (C++23 or newer in our case).
+
+   Reported upstream at https://github.com/simbody/simbody/issues/834.
+
+2) Simbody/src/CablePath.cpp
+
+   Arguments to operator== provided in wrong order. Suspect due to recent C++
+   standards having made implicit conversion rules stricter.
+
+   We could alternatively just define NDEBUG on that source file as the
+   problem code is in an assert() call, but then we'd be disabling quite a few
+   other asserts in that file and we also had to patch another file
+   (CableSpan_SubsystemTestHelper_Impl.cpp) in the same directory so we have
+   to symlink every file in the directory anyway. Therefore might as well fix
+   the bug.
+
+   Reported upstream at https://github.com/simbody/simbody/issues/835.
+
+# Known compilation failures
+
+1) Windows: clang+LLVM
+
+  In file included from C:\tmp\dist\libsimbody-3.8.0-a.0.20250811120202.3f95b33beba5\libsimbody\SimTKcommon\src\ParallelExecutor.cpp:189:
+  In file included from C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\windows.h:221:
+  In file included from C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\ole2.h:37:
+  In file included from C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\objbase.h:27:
+  In file included from C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\combaseapi.h:341:
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\unknwnbase.h:138:24:
+  error: no matching member function for call to 'QueryInterface'
+    138 |                 return QueryInterface(__uuidof(Q), (void **)pp);
+        |                        ^~~~~~~~~~~~~~
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\unknwnbase.h:121:47:
+  note: candidate function not viable: cannot convert argument of incomplete type
+  'const _GUID' to 'const IID' (aka 'const SimTK::_GUID') for 1st argument
+
+  This looks very much like https://github.com/microsoft/cppwinrt/issues/1179.
+
+  We've disabled Windows clang+LLVM builds in the manifest. (Note that the
+  clang+MSVC and Mingw-w64 builds work fine.)
+
+2) Static builds not supported on Windows
+
+   Due to upstream not providing static versions of the prebuilt dependencies.
+
+# Upstream tests
+
+- All but three of the 80+ upstream tests include only public headers so the
+  upstream intention was clearly for their tests to be integration
+  tests. Therefore we have set them up as such (separate subproject in tests/)
+  and simply disabled the three errant tests.
+
+- Some of the upstream tests are quite slow. The entire suite takes almost 2
+  minutes to run on my machine.

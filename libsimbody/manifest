@@ -1,0 +1,22 @@
+: 1
+name: libsimbody
+version: 3.8.0-a.0.z
+# project: SimTK # @@ TODO?
+language: c++
+summary: SimTK multibody dynamics API
+license: Apache-2.0 ; Apache License 2.0.
+description-file: README.md
+package-description-file: PACKAGE-README.md
+url: https://simtk.org/home/simbody
+doc-url: https://simbody.github.io/
+src-url: https://github.com/simbody/simbody.git
+email: simbody-users@lists.simtk.org ; Mailing list.
+package-url: https://github.com/build2-packaging/libsimbody
+package-email: packaging@build2.org ; Mailing list.
+builds: default
+builds: -linux   ; No LAPACK or BLAS on CI.
+builds: -freebsd ; No LAPACK or BLAS on CI.
+builds: -static  ; Not supported on Windows and some upstream tests crash if statically built.
+build-exclude: windows*-clang*llvm** ; Looks like MS cppwinrt bug #1179.
+depends: * build2 >= 0.17.0
+depends: * bpkg >= 0.17.0
