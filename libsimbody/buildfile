@@ -303,25 +303,25 @@ else
 # <srcdir>/include/<incdir>/internal/h          -> include/simbody/<incdir>/internal/
 # <srcdir>/<subdir>/include/<incdir>/internal/h -> include/simbody/<incdir>/internal/
 #
-{hxx h}{*}: install = false # Default to not installed
+{hxx h}{*}:
+{
+  install = false # Default to not installed
+  install.subdirs = false
+}
 
 # SimTKcommon
 #
 for d: . $common_dirs
 {
   # Core headers
-  for h: SimTKcommon/$d/include/hxx{*}
-    $h@./SimTKcommon/$d/include/: \
-      install = include/simbody/
+  SimTKcommon/$d/include/hxx{*}: install = include/simbody/
 
   # Top headers
-  for h: SimTKcommon/$d/include/SimTKcommon/hxx{*}
-    $h@./SimTKcommon/$d/include/SimTKcommon/: \
-      install = include/simbody/SimTKcommon/
+  SimTKcommon/$d/include/SimTKcommon/hxx{*}: \
+    install = include/simbody/SimTKcommon/
 
   # Internal headers
-  for h: SimTKcommon/$d/include/SimTKcommon/internal/hxx{*}
-    $h@./SimTKcommon/$d/include/SimTKcommon/internal/: \
+  SimTKcommon/$d/include/SimTKcommon/internal/hxx{*}: \
       install = include/simbody/SimTKcommon/internal/
 }
 
@@ -330,18 +330,13 @@ for d: . $common_dirs
 for d: . $math_dirs
 {
   # Core headers
-  for h: SimTKmath/$d/include/hxx{*}
-    $h@./SimTKmath/$d/include/: \
-      install = include/simbody/
+  SimTKmath/$d/include/hxx{*}: install = include/simbody/
 
   # Top headers
-  for h: SimTKmath/$d/include/simmath/hxx{*}
-    $h@./SimTKmath/$d/include/simmath/: \
-      install = include/simbody/simmath/
+  SimTKmath/$d/include/simmath/hxx{*}: install = include/simbody/simmath/
 
   # Internal headers
-  for h: SimTKmath/$d/include/simmath/internal/hxx{*}
-    $h@./SimTKmath/$d/include/simmath/internal/: \
+  SimTKmath/$d/include/simmath/internal/hxx{*}: \
       install = include/simbody/simmath/internal/
 }
 
@@ -350,19 +345,14 @@ for d: . $math_dirs
 for d: . $simbody_dirs
 {
   # Core headers
-  for h: Simbody/$d/include/hxx{*}
-    $h@./Simbody/$d/include/: \
-      install = include/simbody/
+  Simbody/$d/include/hxx{*}: install = include/simbody/
 
   # Top headers
-  for h: Simbody/$d/include/simbody/hxx{*}
-    $h@./Simbody/$d/include/simbody/: \
-      install = include/simbody/simbody/
+  Simbody/$d/include/simbody/hxx{*}: install = include/simbody/simbody/
 
   # Internal headers
-  for h: Simbody/$d/include/simbody/internal/hxx{*}
-    $h@./Simbody/$d/include/simbody/internal/: \
-      install = include/simbody/simbody/internal/
+  Simbody/$d/include/simbody/internal/hxx{*}: \
+    install = include/simbody/simbody/internal/
 }
 
 lib{SimTKcommon SimTKmath SimTKsimbody}: cxx.pkgconfig.include = include/simbody/
