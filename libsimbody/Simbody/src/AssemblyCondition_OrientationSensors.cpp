@@ -1,1 +1,0 @@
-../../../upstream/Simbody/src/AssemblyCondition_OrientationSensors.cpp

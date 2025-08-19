@@ -1,1 +1,0 @@
-../../../upstream/Simbody/src/RigidBodyNodeSpec_LineOrientation.h

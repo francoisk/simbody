@@ -1,1 +1,0 @@
-../../../upstream/Simbody/src/SmoothSphereHalfSpaceForceImpl.h

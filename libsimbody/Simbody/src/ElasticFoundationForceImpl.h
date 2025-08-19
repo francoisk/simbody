@@ -1,1 +1,0 @@
-../../../upstream/Simbody/src/ElasticFoundationForceImpl.h

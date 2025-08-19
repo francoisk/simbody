@@ -1,1 +1,0 @@
-../../../upstream/Simbody/src/Constraint_SphereOnPlaneContact.cpp

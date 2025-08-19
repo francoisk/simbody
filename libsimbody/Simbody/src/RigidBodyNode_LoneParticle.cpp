@@ -1,1 +1,0 @@
-../../../upstream/Simbody/src/RigidBodyNode_LoneParticle.cpp

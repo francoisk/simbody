@@ -1,0 +1,1 @@
+../../../../upstream/Simbody/src/RigidBodyNodeSpec_Gimbal.h
