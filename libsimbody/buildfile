@@ -8,7 +8,7 @@ macos   = ($cxx.target.class == 'macos')
 
 ./: lib{SimTKmath}: SimTKmath/hxx{**}                           \
                     SimTKmath/Optimizers/src/IpOpt/hxx{*.hpp}   \
-                    SimTKmath/{cxx c}{** -**tests/*}
+                    SimTKmath/{cxx c}{** -tests/** -**/tests/**}
 
 # Note: Exclude the Visualizer executable code (but do include the Visualizer
 #       library code).
