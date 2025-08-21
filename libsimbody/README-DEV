@@ -1,7 +1,7 @@
 # TODO
 
 1) Consider replacing the upstream-provided prebuilt Windows libraries with
-   build2-packaged ones
+   build2-packaged ones.
 
 2) Consider providing build2-packaged LAPACK and BLAS libraries on Linux and
    BSD. Currently we rely on the user to install the system-provided ones (as
@@ -17,13 +17,17 @@ implementation does exist (e.g. Intel oneMKL).
 1) Simbody/include/simbody/internal/CableSpan.h and
    Simbody/src/CableSpan_SubsystemTestHelper_Impl.cpp
 
+   Note that this has been fixed in upstream commit
+   df1a1400f559b6cc1c48e2e59570ea6568039abc made soon after version 3.8 so
+   probably has a good chance of being released in version 3.9.
+
    Errors due to incomplete type in ~unique_ptr(). Recent C++ standards have
    become stricter in this regard. Upstream probably hasn't run into this yet
    because they let the system compiler select its default C++ standard (C++17
    in my case) while it is common for build2 packages to select the latest C++
    standard (C++23 or newer in our case).
 
-   Reported upstream at https://github.com/simbody/simbody/issues/834.
+   Reported upstream at https://github.com/simbody/simbody/issues #834.
 
 2) Simbody/src/CablePath.cpp
 
@@ -37,7 +41,27 @@ implementation does exist (e.g. Intel oneMKL).
    to symlink every file in the directory anyway. Therefore might as well fix
    the bug.
 
-   Reported upstream at https://github.com/simbody/simbody/issues/835.
+   Reported upstream at https://github.com/simbody/simbody/issues #835.
+
+# Upstream issues to keep an eye on
+
+1) SimTKcommon/internal/common.h: relational operators pollute SimTK namespace
+
+   https://github.com/simbody/simbody/issues #836
+
+   This causes a compilation failure in `libopensim` (i.e., the `opensim`
+   package) which we work around by defining the SWIG_PYTHON macro (see that
+   buildfile for details).
+
+# Warnings in the upstream build
+
+  Upstream has a `default-dev` CMake profile which passes -Wall with which the
+  upstream build emits hundreds of warnings, many of which are legit. I doubt
+  any dev would see this every day without doing anything about it. CMake
+  profiles have to be selected explicitly (`--preset dev-default`) so maybe
+  nobody is doing this?  On CI they only pass -Werror (no -Wall). Without
+  -Wall I get a single warning, in a test program. So most likely nobody is
+  watching warnings.
 
 # Known compilation failures
 
@@ -56,7 +80,7 @@ implementation does exist (e.g. Intel oneMKL).
   note: candidate function not viable: cannot convert argument of incomplete type
   'const _GUID' to 'const IID' (aka 'const SimTK::_GUID') for 1st argument
 
-  This looks very much like https://github.com/microsoft/cppwinrt/issues/1179.
+  This looks very much like https://github.com/microsoft/cppwinrt/issues #1179.
 
   We've disabled Windows clang+LLVM builds in the manifest. (Note that the
   clang+MSVC and Mingw-w64 builds work fine.)
@@ -64,6 +88,13 @@ implementation does exist (e.g. Intel oneMKL).
 2) Static builds not supported on Windows
 
    Due to upstream not providing static versions of the prebuilt dependencies.
+
+   This could probably work but on build2 CI the static configurations are
+   created with config.bin.lib=static and config.bin.exe.lib=static and thus
+   the bpkg.test-installed step fails with build2 error "static variant not
+   available". Not sure why the bpkg.test step succeeds. Possibly because
+   during bpkg.test-installed it sees `-llapack` (from the pkgconfig file)
+   whereas during bpkg.test it sees `libs{liblapack.dll}`?
 
 # Upstream tests
 
