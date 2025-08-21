@@ -65,6 +65,11 @@ implementation does exist (e.g. Intel oneMKL).
 
    Due to upstream not providing static versions of the prebuilt dependencies.
 
+   This could probably work but on build2 CI the static configurations are
+   created with config.bin.lib=static and config.bin.exe.lib=static and thus
+   the bpkg.test-installed step fails with build2 error "static variant not
+   available". Not sure why the bpkg.test step succeeds.
+
 # Upstream tests
 
 - All but three of the 80+ upstream tests include only public headers so the
