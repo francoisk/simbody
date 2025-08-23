@@ -161,6 +161,12 @@ SimTKcommon/objs{*}: cxx.poptions += -DSimTK_SimTKCOMMON_BUILDING_SHARED_LIBRARY
 
 SimTKcommon/obja{*}: cxx.poptions += -DSimTK_SimTKCOMMON_BUILDING_STATIC_LIBRARY
 
+# Build options
+#
+# See README-DEV for note about warnings in the upstream build. In a nutshell:
+# don't pass -Wall otherwise you won't be able to read the build output and it
+# doesn't look like upstream pays much attention to warnings anyway.
+
 # Build options: SimTKmath
 #
 math_includes = "-I$src_base/SimTKmath/include"
