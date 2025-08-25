@@ -1,17 +1,17 @@
 : 1
 name: libsimbody
 version: 3.8.0-a.0.z
-# project: SimTK # @@ TODO?
+project: simbody
 language: c++
-summary: SimTK multibody dynamics API
+summary: SimTK multibody dynamics C++ library
 license: Apache-2.0 ; Apache License 2.0.
 description-file: README.md
 package-description-file: PACKAGE-README.md
 url: https://simtk.org/home/simbody
 doc-url: https://simbody.github.io/
-src-url: https://github.com/simbody/simbody.git
+src-url: https://github.com/simbody/simbody
 email: simbody-users@lists.simtk.org ; Mailing list.
-package-url: https://github.com/build2-packaging/libsimbody
+package-url: https://github.com/build2-packaging/simbody
 package-email: packaging@build2.org ; Mailing list.
 builds: default
 builds: -linux   ; No LAPACK or BLAS on CI.
