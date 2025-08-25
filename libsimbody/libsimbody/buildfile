@@ -1,5 +1,6 @@
 windows = ($cxx.target.class == 'windows')
 macos   = ($cxx.target.class == 'macos')
+mingw   = ($cxx.target.system == 'mingw32')
 
 # Headers and source files.
 #
@@ -51,9 +52,31 @@ if! $windows
 # For LAPACK and BLAS, put the DLL and LIB in an ad hoc group so that build2
 # will be able to find the libi{} target from the libs{} target.
 #
+# Note that we need to do some extra work to get the installed case working.
+#
+# Although build2 usually produces `foo.dll` from libs{foo}, we have to use
+# the upstream-provided DLL name `libfoo.dll` because it is embedded in
+# `libfoo.lib` and therefore this is the name the Windows runtime loader will
+# look for.
+#
+# As for the import library `foo.lib`, we have to change its extension to
+# match that of the compiler being used because that is what build2 does when
+# it processes SimTKcommon.pc (when linking the test executables in the case
+# of the test-installed CI step).
+#
+# For example, assuming MSVC, when build2 sees `-lliblapack` in the .pc file
+# it will look for `<install.root>/lib/liblapack.dll.lib` and pass that full
+# path to link.exe. If it does not find the DLL it will instead pass
+# `-lliblapack` (presumably assuming it must be a system library) which then
+# fails.
+#
+# Therefore we rename foo.lib to `foo.dll.lib` for MSVC, to `foo.lib` for
+# clang, and to `foo.dll.a` for g++ (mingw).
+#
+libi_ext = ($mingw ? 'dll.a' : ($cxx.id == 'clang' ? 'lib' : 'dll.lib'))
 arch_dir = ($cxx.target.cpu == 'x86_64' ? 'lib_x64' : 'lib_x86')
 
-<libs{liblapack.dll} libi{liblapack.lib}>: \
+<libs{liblapack.dll} libi{liblapack.$(libi_ext)}>: \
   Platform/Windows/$arch_dir/file{liblapack.dll liblapack.lib}
 % update
 {{
@@ -65,7 +88,7 @@ arch_dir = ($cxx.target.cpu == 'x86_64' ? 'lib_x64' : 'lib_x86')
   rm -f $path($>[0]) $path($>[1])
 }}
 
-<libs{libblas.dll} libi{libblas.lib}>: \
+<libs{libblas.dll} libi{libblas.$(libi_ext)}>: \
   Platform/Windows/$arch_dir/file{libblas.dll libblas.lib}
 % update
 {{

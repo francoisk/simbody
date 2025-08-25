@@ -92,9 +92,18 @@ implementation does exist (e.g. Intel oneMKL).
    This could probably work but on build2 CI the static configurations are
    created with config.bin.lib=static and config.bin.exe.lib=static and thus
    the bpkg.test-installed step fails with build2 error "static variant not
-   available". Not sure why the bpkg.test step succeeds. Possibly because
-   during bpkg.test-installed it sees `-llapack` (from the pkgconfig file)
-   whereas during bpkg.test it sees `libs{liblapack.dll}`?
+   available".
+
+   The bpkg.test step presumably succeeds because build2 sees
+   `lib{SimTKcommon}: libs{liblapack.dll}` in the buildfile whereas during
+   test-installed it sees only `-llapack` in libSimTKcommon.static.pc and then
+   fails when it can't find liblapack.static.pc (and/or perhaps
+   liblapack.lib?).
+
+   Note that I was able to reproduce these failures locally on Linux by
+   substituting a simple libs{foo} for libs{liblapack.dll} which I am
+   satisfied proves that it's not the manual work we do on these prebuilt DLLs
+   that causes breakage.
 
 # Upstream tests
 
