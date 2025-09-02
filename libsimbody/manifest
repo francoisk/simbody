@@ -14,9 +14,13 @@ email: simbody-users@lists.simtk.org ; Mailing list.
 package-url: https://github.com/build2-packaging/simbody
 package-email: packaging@build2.org ; Mailing list.
 builds: default
-builds: -linux   ; No LAPACK or BLAS on CI.
-builds: -freebsd ; No LAPACK or BLAS on CI.
-builds: -static  ; Not supported on Windows and some upstream tests crash if statically built.
-build-exclude: windows*-clang*llvm** ; Looks like MS cppwinrt bug #1179.
+builds: -linux   ; No LAPACK or BLAS on CI (for libsimbody).
+builds: -freebsd ; No LAPACK or BLAS on CI (for libsimbody).
+builds: -windows ; Separate config
+windows-builds: &windows
+windows-builds: -static ; Not supported on Windows (libsimbody)
+windows-build-exclude: windows*-clang*llvm** ; Looks like MS cppwinrt bug #1179 (libsimbody).
+windows-build-exclude: **mingw_w64** ; Not supported.
+windows-build-config: config.bin.lib=shared ; Conserve disk space on CI VMs.
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
